@@ -1,4 +1,5 @@
 #addin "Cake.Xamarin"
+#tool "nuget:?package=GitVersion.CommandLine&version=5.0.1" // Reference older version because newest doesn't work on macOS.
 
 var target = Argument("target", (string)null);
 
@@ -49,11 +50,25 @@ public class BuildInfo
 }
 
 //====================================================================
-//
+// Setups script.
 
 Setup<BuildInfo>(setupContext => 
 {
-    return new BuildInfo(apiUrl: "https://dev.tastyformsapp.com");
+    var gitVersion = GitVersion();
+    var branchName = gitVersion.BranchName;
+
+    string apiUrl = "https://dev.tastyformsapp.com";
+
+    if (branchName.StartsWith("release/"))
+    {
+        apiUrl = "https://staging.tastyformsapp.com";
+    }
+    else if (branchName.Equals("master"))
+    {
+        apiUrl = "https://prod.tastyformsapp.com";
+    }
+
+    return new BuildInfo(apiUrl);
 });
 
 //====================================================================
