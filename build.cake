@@ -13,6 +13,9 @@ const string APP_PACKAGE_FOLDER_NAME = "AppPackages";
 // Android
 const string PATH_TO_ANDROID_PROJECT = "TastyFormsApp.Android/TastyFormsApp.Android.csproj";
 
+// iOS
+const string PATH_TO_IOS_PROJECT = "TastyFormsApp.iOS/TastyFormsApp.iOS.csproj";
+
 //====================================================================
 // Moves app package to app packages folder
 
@@ -79,5 +82,13 @@ Task("PublishAPK")
 });
 
 //====================================================================
+
+Task("PublishIPA")
+  .IsDependentOn("RunUnitTests")
+  .Does(() =>
+  {
+    var ipaFilePath = BuildiOSIpa(PATH_TO_IOS_PROJECT, "Release");
+    MoveAppPackageToPackagesFolder(ipaFilePath);
+  });
 
 RunTarget(target);
