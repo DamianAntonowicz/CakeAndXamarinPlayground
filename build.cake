@@ -36,6 +36,27 @@ public string MoveAppPackageToPackagesFolder(FilePath appPackageFilePath)
 }
 
 //====================================================================
+// Class that hold information for current build.
+
+public class BuildInfo
+{
+    public string ApiUrl { get; }
+
+    public BuildInfo(string apiUrl)
+    {
+        ApiUrl = apiUrl;
+    }
+}
+
+//====================================================================
+//
+
+Setup<BuildInfo>(setupContext => 
+{
+    return new BuildInfo(apiUrl: "https://dev.tastyformsapp.com");
+});
+
+//====================================================================
 // Cleans all bin and obj folders.
 
 Task("Clean")
@@ -53,6 +74,18 @@ Task("Restore")
 {
   NuGetRestore(PATH_TO_SOLUTION);
 });
+
+//====================================================================
+// Updates config files with proper values
+
+Task("UpdateConfigFiles")
+  .Does<BuildInfo>(BuildInfo =>
+  {
+      var appSettingsFile = File("TastyFormsApp/AppSettings.cs");
+      TransformTextFile(appSettingsFile)
+        .WithToken("API_URL", BuildInfo.ApiUrl)
+        .Save(appSettingsFile);
+  });
 
 //====================================================================
 // Run unit tests
@@ -75,6 +108,7 @@ Task("RunUnitTests")
 
 Task("PublishAPK")
   .IsDependentOn("RunUnitTests")
+  .IsDependentOn("UpdateConfigFiles")
   .Does(() => 
 {
     var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true);
@@ -85,6 +119,7 @@ Task("PublishAPK")
 
 Task("PublishIPA")
   .IsDependentOn("RunUnitTests")
+  .IsDependentOn("UpdateConfigFiles")
   .Does(() =>
   {
     var ipaFilePath = BuildiOSIpa(PATH_TO_IOS_PROJECT, "Release");
