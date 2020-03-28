@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TastyFormsApp.iOS", "TastyF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TastyFormsApp", "TastyFormsApp\TastyFormsApp.csproj", "{8C7E53F6-C0D1-49DC-9A40-D49E1C854B4B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TastyFormsApp.Tests", "TastyFormsApp.Tests\TastyFormsApp.Tests.csproj", "{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,5 +55,17 @@ Global
 		{8C7E53F6-C0D1-49DC-9A40-D49E1C854B4B}.Debug|iPhone.Build.0 = Debug|Any CPU
 		{8C7E53F6-C0D1-49DC-9A40-D49E1C854B4B}.Release|iPhone.ActiveCfg = Release|Any CPU
 		{8C7E53F6-C0D1-49DC-9A40-D49E1C854B4B}.Release|iPhone.Build.0 = Release|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{582DFB03-1624-414F-BCD4-4AF30C7D5F1B}.Release|iPhone.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
