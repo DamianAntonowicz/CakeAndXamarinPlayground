@@ -1,16 +1,39 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+
 <ContentPage
-    xmlns      ="http://xamarin.com/schemas/2014/forms"
-    xmlns:x     ="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:d     ="http://xamarin.com/schemas/2014/forms/design"
-    xmlns:mc    ="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:magic="clr-namespace:MagicGradients;assembly=MagicGradients"
     mc:Ignorable="d"
-    x:Class     ="TastyFormsApp.MainPage">
-    <StackLayout>
-        <!-- Place new controls here -->
+    x:Class="TastyFormsApp.MainPage">
+
+    <Grid>
+        
+        <magic:GradientView HorizontalOptions="FillAndExpand"
+                            VerticalOptions="FillAndExpand">
+            <magic:GradientView.GradientSource>
+                <magic:GradientCollection>
+                    <magic:LinearGradient Angle="45">
+                        <magic:GradientStop Color="Orange" Offset="0" />
+                        <magic:GradientStop Color="#ff0000" Offset="0.6" />
+                    </magic:LinearGradient>
+                    <magic:LinearGradient Angle="90">
+                        <magic:GradientStop Color="#33ff0000" Offset="0.4" />
+                        <magic:GradientStop Color="#ff00ff00" Offset="1" />
+                    </magic:LinearGradient>
+                </magic:GradientCollection>
+            </magic:GradientView.GradientSource>
+        </magic:GradientView>
+        
         <Label
-            Text             ="Welcome to Xamarin.Forms!"
+            Text="Welcome to Xamarin.Forms!"
+            TextColor="White"
+            FontSize="Large"
             HorizontalOptions="Center"
-            VerticalOptions  ="CenterAndExpand" />
-    </StackLayout>
+            VerticalOptions="CenterAndExpand" />
+        
+    </Grid>
+    
 </ContentPage>
