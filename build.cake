@@ -22,14 +22,14 @@ const string PATH_TO_IOS_PROJECT = "TastyFormsApp.iOS/TastyFormsApp.iOS.csproj";
 public string MoveAppPackageToPackagesFolder(FilePath appPackageFilePath)
 {
     var packageFileName = appPackageFilePath.GetFilename();
-    var targetAppPackageFilePath = new FilePath($"./{APP_PACKAGE_FOLDER_NAME}/" + packageFileName);
+    var targetAppPackageFilePath = new FilePath($"{APP_PACKAGE_FOLDER_NAME}/" + packageFileName);
 
     if (FileExists(targetAppPackageFilePath))
     {
         DeleteFile(targetAppPackageFilePath);
     }
 
-    EnsureDirectoryExists($"./{APP_PACKAGE_FOLDER_NAME}");
+    EnsureDirectoryExists($"{APP_PACKAGE_FOLDER_NAME}");
     MoveFile(appPackageFilePath, targetAppPackageFilePath);
 
     return targetAppPackageFilePath.ToString();
