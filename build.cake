@@ -14,6 +14,9 @@ const string APP_PACKAGE_FOLDER_NAME = "AppPackages";
 // Android
 const string PATH_TO_ANDROID_PROJECT = "TastyFormsApp.Android/TastyFormsApp.Android.csproj";
 const string PATH_TO_ANDROID_MANIFEST_FILE = "TastyFormsApp.Android/Properties/AndroidManifest.xml";
+readonly string PATH_TO_ANDROID_KEYSTORE_FILE = EnvironmentVariable("TASTYFORMSAPP_KEYSTORE_PATH");
+readonly string ANDROID_KEYSTORE_ALIAS = EnvironmentVariable("TASTYFORMSAPP_KEYSTORE_ALIAS");
+readonly string ANDROID_KEYSTORE_PASSWORD = EnvironmentVariable("TASTYFORMSAPP_KEYSTORE_PASSWORD");
 
 // iOS
 const string PATH_TO_IOS_PROJECT = "TastyFormsApp.iOS/TastyFormsApp.iOS.csproj";
@@ -48,22 +51,19 @@ public class BuildInfo
     public string AppVersion { get; }
     public string AppName { get; }
     public string PackageName { get; }
-    public string IosBuildConfiguration { get; }
 
     public BuildInfo(
       string apiUrl, 
       string buildNumber, 
       string appVersion,
       string appName,
-      string packageName,
-      string iosBuildConfiguration)
+      string packageName)
     {
         ApiUrl = apiUrl;
         BuildNumber = buildNumber;
         AppVersion = appVersion;
         AppName = appName;
         PackageName = packageName;
-        IosBuildConfiguration = iosBuildConfiguration;
     }
 }
 
@@ -77,7 +77,6 @@ Setup<BuildInfo>(setupContext =>
     var apiUrl = "https://dev.tastyformsapp.com";
     var appName = "TastyFormsApp.dev";
     var packageName = "com.tastyformsapp.dev";
-    var iosBuildConfiguration = "Release";
 
     if (branchName.StartsWith("release/"))
     {
@@ -90,7 +89,6 @@ Setup<BuildInfo>(setupContext =>
         apiUrl = "https://prod.tastyformsapp.com";
         appName = "TastyFormsApp";
         packageName = "com.tastyformsapp";
-        iosBuildConfiguration = "AppStore";
     }
 
     return new BuildInfo(
@@ -98,8 +96,7 @@ Setup<BuildInfo>(setupContext =>
       buildNumber: DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
       appVersion: gitVersion.MajorMinorPatch,
       appName,
-      packageName,
-      iosBuildConfiguration);
+      packageName);
 });
 
 //====================================================================
@@ -171,8 +168,26 @@ Task("PublishAPK")
     XmlPoke(androidManifestFilePath, "/manifest/application/@android:label", buildInfo.AppName, xmlPokeSettings);
     XmlPoke(androidManifestFilePath, "/manifest/@package", buildInfo.PackageName, xmlPokeSettings);
 
-    var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true);
-    MoveAppPackageToPackagesFolder(apkFilePath);
+    var gitVersion = GitVersion();
+
+    if (gitVersion.BranchName == "master")
+    {
+        var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true, configurator: msBuildSettings => 
+        {
+            msBuildSettings.WithProperty("AndroidKeyStore", "True")
+                           .WithProperty("AndroidSigningKeyAlias", ANDROID_KEYSTORE_ALIAS)
+                           .WithProperty("AndroidSigningKeyPass", ANDROID_KEYSTORE_PASSWORD)
+                           .WithProperty("AndroidSigningKeyStore", PATH_TO_ANDROID_KEYSTORE_FILE)
+                           .WithProperty("AndroidSigningStorePass", ANDROID_KEYSTORE_PASSWORD);
+        });
+
+        MoveAppPackageToPackagesFolder(apkFilePath);
+    }
+    else
+    {
+        var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true);
+        MoveAppPackageToPackagesFolder(apkFilePath);
+    }
 });
 
 //====================================================================
@@ -195,7 +210,15 @@ Task("PublishIPA")
     XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleDisplayName']/following-sibling::string[1]", buildInfo.AppName, xmlPokeSettings);
     XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleIdentifier']/following-sibling::string[1]", buildInfo.PackageName, xmlPokeSettings);
 
-    var ipaFilePath = BuildiOSIpa(PATH_TO_IOS_PROJECT, buildInfo.IosBuildConfiguration);
+    var buildConfiguration = "Release";
+    var gitVersion = GitVersion();
+
+    if (gitVersion.BranchName.Equals("master"))
+    {
+        buildConfiguration = "AppStore";
+    }
+
+    var ipaFilePath = BuildiOSIpa(PATH_TO_IOS_PROJECT, buildConfiguration);
     MoveAppPackageToPackagesFolder(ipaFilePath);
   });
 
