@@ -1,4 +1,5 @@
 #addin "Cake.Xamarin"
+#addin "Cake.AppCenter"
 #tool "nuget:?package=GitVersion.CommandLine&version=5.0.1" // Reference older version because newest doesn't work on macOS.
 
 var target = Argument("target", (string)null);
@@ -10,6 +11,7 @@ var target = Argument("target", (string)null);
 const string PATH_TO_SOLUTION = "TastyFormsApp.sln";
 const string PATH_TO_UNIT_TESTS_PROJECT = "TastyFormsApp.Tests/TastyFormsApp.Tests.csproj";
 const string APP_PACKAGE_FOLDER_NAME = "AppPackages";
+readonly string APP_CENTER_TOKEN = EnvironmentVariable("TASTYFORMSAPP_APP_CENTER_TOKEN");
 
 // Android
 const string PATH_TO_ANDROID_PROJECT = "TastyFormsApp.Android/TastyFormsApp.Android.csproj";
@@ -51,19 +53,22 @@ public class BuildInfo
     public string AppVersion { get; }
     public string AppName { get; }
     public string PackageName { get; }
+    public string AndroidAppCenterAppName { get; }
 
     public BuildInfo(
       string apiUrl, 
       string buildNumber, 
       string appVersion,
       string appName,
-      string packageName)
+      string packageName,
+      string androidAppCenterAppName)
     {
         ApiUrl = apiUrl;
         BuildNumber = buildNumber;
         AppVersion = appVersion;
         AppName = appName;
         PackageName = packageName;
+        AndroidAppCenterAppName = androidAppCenterAppName;
     }
 }
 
@@ -77,12 +82,14 @@ Setup<BuildInfo>(setupContext =>
     var apiUrl = "https://dev.tastyformsapp.com";
     var appName = "TastyFormsApp.dev";
     var packageName = "com.tastyformsapp.dev";
+    var androidAppCenterAppName = "TastyFormsApp/TastyFormsApp-Android-DEV";
 
     if (branchName.StartsWith("release/"))
     {
         apiUrl = "https://staging.tastyformsapp.com";
         appName = "TastyFormsApp.staging";
         packageName = "com.tastyformsapp.staging";
+        androidAppCenterAppName = "TastyFormsApp/TastyFormsApp-Android-staging";
     }
     else if (branchName.Equals("master"))
     {
@@ -96,7 +103,8 @@ Setup<BuildInfo>(setupContext =>
       buildNumber: DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
       appVersion: gitVersion.MajorMinorPatch,
       appName,
-      packageName);
+      packageName,
+      androidAppCenterAppName);
 });
 
 //====================================================================
@@ -188,6 +196,29 @@ Task("PublishAPK")
         var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true);
         MoveAppPackageToPackagesFolder(apkFilePath);
     }
+});
+
+//====================================================================
+// Deploys APK to App Center
+
+Task("DeployAPKToAppCenter")
+  .IsDependentOn("PublishAPK")
+  .Does<BuildInfo>(buildInfo => 
+{
+    var gitVersion = GitVersion();
+
+    if (gitVersion.BranchName.Equals("master"))
+    {
+        throw new InvalidOperationException("Master branch being deployed to App Center.");
+    }
+
+    AppCenterDistributeRelease(new AppCenterDistributeReleaseSettings
+    {
+        File = $"{APP_PACKAGE_FOLDER_NAME}/{buildInfo.PackageName}-Signed.apk",
+        Group = "Collaborators",
+        App = buildInfo.AndroidAppCenterAppName,
+        Token = APP_CENTER_TOKEN
+    });
 });
 
 //====================================================================
