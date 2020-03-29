@@ -8,6 +8,7 @@ var target = Argument("target", (string)null);
 // Consts
 
 // General
+const string APP_NAME="TastyFormsApp";
 const string PATH_TO_SOLUTION = "TastyFormsApp.sln";
 const string PATH_TO_UNIT_TESTS_PROJECT = "TastyFormsApp.Tests/TastyFormsApp.Tests.csproj";
 const string APP_PACKAGE_FOLDER_NAME = "AppPackages";
@@ -54,6 +55,9 @@ public class BuildInfo
     public string AppName { get; }
     public string PackageName { get; }
     public string AndroidAppCenterAppName { get; }
+    public string ApkFileName { get; }
+    public string IosAppCenterAppName { get; }
+    public string IpaFileName { get; }
 
     public BuildInfo(
       string apiUrl, 
@@ -61,7 +65,10 @@ public class BuildInfo
       string appVersion,
       string appName,
       string packageName,
-      string androidAppCenterAppName)
+      string androidAppCenterAppName,
+      string apkFileName,
+      string iosAppCenterAppName,
+      string ipaFileName)
     {
         ApiUrl = apiUrl;
         BuildNumber = buildNumber;
@@ -69,6 +76,9 @@ public class BuildInfo
         AppName = appName;
         PackageName = packageName;
         AndroidAppCenterAppName = androidAppCenterAppName;
+        ApkFileName = apkFileName;
+        IosAppCenterAppName = iosAppCenterAppName;
+        IpaFileName = ipaFileName;
     }
 }
 
@@ -80,23 +90,28 @@ Setup<BuildInfo>(setupContext =>
     var gitVersion = GitVersion();
     var branchName = gitVersion.BranchName;
     var apiUrl = "https://dev.tastyformsapp.com";
-    var appName = "TastyFormsApp.dev";
+    var appName = $"{APP_NAME}.dev";
     var packageName = "com.tastyformsapp.dev";
     var androidAppCenterAppName = "TastyFormsApp/TastyFormsApp-Android-DEV";
+    var iosAppCenterAppName = "TastyFormsApp/TastyFormsApp-iOS-DEV";
+    var ipaFileName = $"{APP_NAME}.iOS.ipa";
 
     if (branchName.StartsWith("release/"))
     {
         apiUrl = "https://staging.tastyformsapp.com";
-        appName = "TastyFormsApp.staging";
+        appName = $"{APP_NAME}.staging";
         packageName = "com.tastyformsapp.staging";
         androidAppCenterAppName = "TastyFormsApp/TastyFormsApp-Android-staging";
+        iosAppCenterAppName = "TastyFormsApp/TastyFormsApp-iOS-staging";
     }
     else if (branchName.Equals("master"))
     {
         apiUrl = "https://prod.tastyformsapp.com";
-        appName = "TastyFormsApp";
+        appName = APP_NAME;
         packageName = "com.tastyformsapp";
     }
+
+    var apkFileName = $"{packageName}-Signed.apk";
 
     return new BuildInfo(
       apiUrl,
@@ -104,7 +119,10 @@ Setup<BuildInfo>(setupContext =>
       appVersion: gitVersion.MajorMinorPatch,
       appName,
       packageName,
-      androidAppCenterAppName);
+      androidAppCenterAppName,
+      apkFileName,
+      iosAppCenterAppName,
+      ipaFileName);
 });
 
 //====================================================================
@@ -214,7 +232,7 @@ Task("DeployAPKToAppCenter")
 
     AppCenterDistributeRelease(new AppCenterDistributeReleaseSettings
     {
-        File = $"{APP_PACKAGE_FOLDER_NAME}/{buildInfo.PackageName}-Signed.apk",
+        File = $"{APP_PACKAGE_FOLDER_NAME}/{buildInfo.ApkFileName}",
         Group = "Collaborators",
         App = buildInfo.AndroidAppCenterAppName,
         Token = APP_CENTER_TOKEN
@@ -222,6 +240,7 @@ Task("DeployAPKToAppCenter")
 });
 
 //====================================================================
+// Publish iOS IPA
 
 Task("PublishIPA")
   .IsDependentOn("RunUnitTests")
@@ -252,5 +271,29 @@ Task("PublishIPA")
     var ipaFilePath = BuildiOSIpa(PATH_TO_IOS_PROJECT, buildConfiguration);
     MoveAppPackageToPackagesFolder(ipaFilePath);
   });
+
+//====================================================================
+// Deploys IPA to App Center
+Task("DeployIPAToAppCenter")
+  .IsDependentOn("PublishIPA")
+  .Does<BuildInfo>(buildInfo => 
+{
+    var gitVersion = GitVersion();
+
+    if (gitVersion.BranchName.Equals("master"))
+    {
+        throw new InvalidOperationException("Master branch being deployed to App Center.");
+    }
+
+    AppCenterDistributeRelease(new AppCenterDistributeReleaseSettings
+    {
+        File = $"{APP_PACKAGE_FOLDER_NAME}/{buildInfo.IpaFileName}",
+        Group = "Collaborators",
+        App = buildInfo.IosAppCenterAppName,
+        Token = APP_CENTER_TOKEN
+    });
+});
+
+//====================================================================
 
 RunTarget(target);
