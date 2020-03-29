@@ -17,6 +17,7 @@ const string PATH_TO_ANDROID_MANIFEST_FILE = "TastyFormsApp.Android/Properties/A
 
 // iOS
 const string PATH_TO_IOS_PROJECT = "TastyFormsApp.iOS/TastyFormsApp.iOS.csproj";
+const string PATH_TO_INFO_PLIST_FILE = "TastyFormsApp.iOS/Info.plist";
 
 //====================================================================
 // Moves app package to app packages folder
@@ -47,19 +48,22 @@ public class BuildInfo
     public string AppVersion { get; }
     public string AppName { get; }
     public string PackageName { get; }
+    public string IosBuildConfiguration { get; }
 
     public BuildInfo(
       string apiUrl, 
       string buildNumber, 
       string appVersion,
       string appName,
-      string packageName)
+      string packageName,
+      string iosBuildConfiguration)
     {
         ApiUrl = apiUrl;
         BuildNumber = buildNumber;
         AppVersion = appVersion;
         AppName = appName;
         PackageName = packageName;
+        IosBuildConfiguration = iosBuildConfiguration;
     }
 }
 
@@ -73,6 +77,7 @@ Setup<BuildInfo>(setupContext =>
     var apiUrl = "https://dev.tastyformsapp.com";
     var appName = "TastyFormsApp.dev";
     var packageName = "com.tastyformsapp.dev";
+    var iosBuildConfiguration = "Release";
 
     if (branchName.StartsWith("release/"))
     {
@@ -85,6 +90,7 @@ Setup<BuildInfo>(setupContext =>
         apiUrl = "https://prod.tastyformsapp.com";
         appName = "TastyFormsApp";
         packageName = "com.tastyformsapp";
+        iosBuildConfiguration = "AppStore";
     }
 
     return new BuildInfo(
@@ -92,7 +98,8 @@ Setup<BuildInfo>(setupContext =>
       buildNumber: DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
       appVersion: gitVersion.MajorMinorPatch,
       appName,
-      packageName);
+      packageName,
+      iosBuildConfiguration);
 });
 
 //====================================================================
@@ -158,11 +165,11 @@ Task("PublishAPK")
         }
     };
 
-    var androidManifest = PATH_TO_ANDROID_MANIFEST_FILE;
-    XmlPoke(androidManifest, "/manifest/@android:versionName", buildInfo.AppVersion, xmlPokeSettings);
-    XmlPoke(androidManifest, "/manifest/@android:versionCode", buildInfo.BuildNumber, xmlPokeSettings);
-    XmlPoke(androidManifest, "/manifest/application/@android:label", buildInfo.AppName, xmlPokeSettings);
-    XmlPoke(androidManifest, "/manifest/@package", buildInfo.PackageName, xmlPokeSettings);
+    var androidManifestFilePath = PATH_TO_ANDROID_MANIFEST_FILE;
+    XmlPoke(androidManifestFilePath, "/manifest/@android:versionName", buildInfo.AppVersion, xmlPokeSettings);
+    XmlPoke(androidManifestFilePath, "/manifest/@android:versionCode", buildInfo.BuildNumber, xmlPokeSettings);
+    XmlPoke(androidManifestFilePath, "/manifest/application/@android:label", buildInfo.AppName, xmlPokeSettings);
+    XmlPoke(androidManifestFilePath, "/manifest/@package", buildInfo.PackageName, xmlPokeSettings);
 
     var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true);
     MoveAppPackageToPackagesFolder(apkFilePath);
@@ -173,9 +180,22 @@ Task("PublishAPK")
 Task("PublishIPA")
   .IsDependentOn("RunUnitTests")
   .IsDependentOn("UpdateConfigFiles")
-  .Does(() =>
+  .Does<BuildInfo>(buildInfo =>
   {
-    var ipaFilePath = BuildiOSIpa(PATH_TO_IOS_PROJECT, "Release");
+    var iOSplist = PATH_TO_INFO_PLIST_FILE;
+
+    var xmlPokeSettings = new XmlPokeSettings
+    {
+        DtdProcessing = XmlDtdProcessing.Parse
+    };
+
+    XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleShortVersionString']/following-sibling::string[1]", buildInfo.AppVersion, xmlPokeSettings);
+    XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleVersion']/following-sibling::string[1]", buildInfo.BuildNumber, xmlPokeSettings);
+    XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleName']/following-sibling::string[1]", buildInfo.AppName, xmlPokeSettings);
+    XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleDisplayName']/following-sibling::string[1]", buildInfo.AppName, xmlPokeSettings);
+    XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleIdentifier']/following-sibling::string[1]", buildInfo.PackageName, xmlPokeSettings);
+
+    var ipaFilePath = BuildiOSIpa(PATH_TO_IOS_PROJECT, buildInfo.IosBuildConfiguration);
     MoveAppPackageToPackagesFolder(ipaFilePath);
   });
 
