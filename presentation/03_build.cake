@@ -8,6 +8,7 @@ var target = Argument("target", (string)null);
 // General
 const string PATH_TO_SOLUTION = "TastyFormsApp.sln";
 const string PATH_TO_UNIT_TESTS_PROJECT = "TastyFormsApp.Tests/TastyFormsApp.Tests.csproj";
+const string APP_PACKAGE_FOLDER_NAME = "AppPackages";
 
 // Android
 const string PATH_TO_ANDROID_PROJECT = "TastyFormsApp.Android/TastyFormsApp.Android.csproj";
@@ -74,8 +75,7 @@ Task("RunUnitTests")
 
 Task("PublishAPK")
   .IsDependentOn("RunUnitTests")
-  .IsDependentOn("UpdateConfigFiles")
-  .Does(()) => 
+  .Does(() => 
 {
     var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true);
     MoveAppPackageToPackagesFolder(apkFilePath);
@@ -86,8 +86,7 @@ Task("PublishAPK")
 
 Task("PublishIPA")
   .IsDependentOn("RunUnitTests")
-  .IsDependentOn("UpdateConfigFiles")
-  .Does(()) =>
+  .Does(() =>
   {
         var ipaFilePath = BuildiOSIpa(PATH_TO_IOS_PROJECT, "Release");
         MoveAppPackageToPackagesFolder(ipaFilePath);
