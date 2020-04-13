@@ -3,9 +3,15 @@
 #tool "nuget:?package=GitVersion.CommandLine&version=5.0.1" // Reference older version because newest doesn't work on macOS.
 
 var target = Argument("target", (string)null);
+var environmentArg = Argument("environment", (string)null);
 
 //====================================================================
 // Consts
+
+// Environment
+const string DEV_ENV = "dev";
+const string STAGING_ENV = "staging";
+const string PROD_ENV = "prod";
 
 // General
 const string APP_NAME="TastyFormsApp";
@@ -58,6 +64,7 @@ public class BuildInfo
     public string ApkFileName { get; }
     public string IosAppCenterAppName { get; }
     public string IpaFileName { get; }
+    public string Environment { get; }
 
     public BuildInfo(
       string apiUrl, 
@@ -68,7 +75,8 @@ public class BuildInfo
       string androidAppCenterAppName,
       string apkFileName,
       string iosAppCenterAppName,
-      string ipaFileName)
+      string ipaFileName,
+      string environment)
     {
         ApiUrl = apiUrl;
         BuildNumber = buildNumber;
@@ -79,6 +87,7 @@ public class BuildInfo
         ApkFileName = apkFileName;
         IosAppCenterAppName = iosAppCenterAppName;
         IpaFileName = ipaFileName;
+        Environment = environment;
     }
 }
 
@@ -95,8 +104,9 @@ Setup<BuildInfo>(setupContext =>
     var androidAppCenterAppName = "TastyFormsApp/TastyFormsApp-Android-DEV";
     var iosAppCenterAppName = "TastyFormsApp/TastyFormsApp-iOS-DEV";
     var ipaFileName = $"{APP_NAME}.iOS.ipa";
+    var currentEnvironment = GetEnvironment();
 
-    if (branchName.StartsWith("release/"))
+    if (currentEnvironment == STAGING_ENV)
     {
         apiUrl = "https://staging.tastyformsapp.com";
         appName = $"{APP_NAME}.staging";
@@ -104,7 +114,7 @@ Setup<BuildInfo>(setupContext =>
         androidAppCenterAppName = "TastyFormsApp/TastyFormsApp-Android-staging";
         iosAppCenterAppName = "TastyFormsApp/TastyFormsApp-iOS-staging";
     }
-    else if (branchName.Equals("master"))
+    else if (currentEnvironment == PROD_ENV)
     {
         apiUrl = "https://prod.tastyformsapp.com";
         appName = APP_NAME;
@@ -122,8 +132,35 @@ Setup<BuildInfo>(setupContext =>
       androidAppCenterAppName,
       apkFileName,
       iosAppCenterAppName,
-      ipaFileName);
+      ipaFileName,
+      currentEnvironment);
 });
+
+public string GetEnvironment()
+{
+    if (String.IsNullOrEmpty(environmentArg))
+    {
+        var gitVersion = GitVersion();
+        var branchName = gitVersion.BranchName;
+
+        if (branchName.StartsWith("release/"))
+        {
+            return STAGING_ENV;
+        }
+        else if (branchName.Equals("master"))
+        {
+            return PROD_ENV;
+        }
+        else
+        {
+            return DEV_ENV;
+        }
+    }
+    else
+    {
+        return environmentArg;
+    }
+}
 
 //====================================================================
 // Cleans all bin and obj folders.
@@ -194,9 +231,7 @@ Task("PublishAPK")
     XmlPoke(androidManifestFilePath, "/manifest/application/@android:label", buildInfo.AppName, xmlPokeSettings);
     XmlPoke(androidManifestFilePath, "/manifest/@package", buildInfo.PackageName, xmlPokeSettings);
 
-    var gitVersion = GitVersion();
-
-    if (gitVersion.BranchName == "master")
+    if (buildInfo.Environment == PROD_ENV)
     {
         var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true, configurator: msBuildSettings => 
         {
@@ -223,9 +258,7 @@ Task("DeployAPKToAppCenter")
   .IsDependentOn("PublishAPK")
   .Does<BuildInfo>(buildInfo => 
 {
-    var gitVersion = GitVersion();
-
-    if (gitVersion.BranchName.Equals("master"))
+    if (buildInfo.Environment == PROD_ENV)
     {
         throw new InvalidOperationException("Master branch being deployed to App Center.");
     }
@@ -261,9 +294,8 @@ Task("PublishIPA")
     XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleIdentifier']/following-sibling::string[1]", buildInfo.PackageName, xmlPokeSettings);
 
     var buildConfiguration = "Release";
-    var gitVersion = GitVersion();
 
-    if (gitVersion.BranchName.Equals("master"))
+    if (buildInfo.Environment == PROD_ENV)
     {
         buildConfiguration = "AppStore";
     }
@@ -278,9 +310,7 @@ Task("DeployIPAToAppCenter")
   .IsDependentOn("PublishIPA")
   .Does<BuildInfo>(buildInfo => 
 {
-    var gitVersion = GitVersion();
-
-    if (gitVersion.BranchName.Equals("master"))
+    if (buildInfo.Environment == PROD_ENV)
     {
         throw new InvalidOperationException("Master branch being deployed to App Center.");
     }
