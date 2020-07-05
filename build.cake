@@ -178,7 +178,10 @@ Task("Clean")
 Task("Restore")
   .Does(() =>
 {
-  NuGetRestore(PATH_TO_SOLUTION);
+    DotNetCoreRestore(PATH_TO_SOLUTION);
+    
+    NuGetRestore(PATH_TO_IOS_PROJECT);
+    NuGetRestore(PATH_TO_ANDROID_PROJECT);
 });
 
 //====================================================================
