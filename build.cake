@@ -206,7 +206,8 @@ Task("RunUnitTests")
   {
      var settings = new DotNetCoreTestSettings
      {
-         Configuration = "Release"
+         Configuration = "Release",
+         ArgumentCustomization = args=>args.Append("--logger trx;LogFileName=Tests.xml")
      };
 
       DotNetCoreTest(PATH_TO_UNIT_TESTS_PROJECT, settings);
