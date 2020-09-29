@@ -215,11 +215,9 @@ Task("RunUnitTests")
 //==================================================================== Android ====================================================================
 
 //====================================================================
-// Publish Android APK
+// Update Android Manifest
 
-Task("PublishAPK")
-  .IsDependentOn("RunUnitTests")
-  .IsDependentOn("UpdateConfigFiles")
+Task("UpdateAndroidManifest")
   .Does<BuildInfo>(buildInfo => 
 {
     var xmlPokeSettings = new XmlPokeSettings
@@ -235,8 +233,17 @@ Task("PublishAPK")
     XmlPoke(androidManifestFilePath, "/manifest/@android:versionCode", buildInfo.BuildNumber, xmlPokeSettings);
     XmlPoke(androidManifestFilePath, "/manifest/application/@android:label", buildInfo.AppName, xmlPokeSettings);
     XmlPoke(androidManifestFilePath, "/manifest/@package", buildInfo.PackageName, xmlPokeSettings);
+});
 
-    if (buildInfo.Environment == PROD_ENV)
+//====================================================================
+// Publish Android APK
+
+Task("PublishAPK")
+  .IsDependentOn("RunUnitTests")
+  .IsDependentOn("UpdateConfigFiles")
+  .IsDependentOn("UpdateAndroidManifest")
+  .Does<BuildInfo>(buildInfo => 
+{if (buildInfo.Environment == PROD_ENV)
     {
         var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true, configurator: msBuildSettings => 
         {
