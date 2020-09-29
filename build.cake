@@ -243,9 +243,12 @@ Task("PublishAPK")
   .IsDependentOn("UpdateConfigFiles")
   .IsDependentOn("UpdateAndroidManifest")
   .Does<BuildInfo>(buildInfo => 
-{if (buildInfo.Environment == PROD_ENV)
+{
+    FilePath apkFilePath = null;
+
+    if (buildInfo.Environment == PROD_ENV)
     {
-        var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true, configurator: msBuildSettings => 
+        apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true, configurator: msBuildSettings => 
         {
             msBuildSettings.WithProperty("AndroidKeyStore", "True")
                            .WithProperty("AndroidSigningKeyAlias", ANDROID_KEYSTORE_ALIAS)
@@ -253,14 +256,13 @@ Task("PublishAPK")
                            .WithProperty("AndroidSigningKeyStore", PATH_TO_ANDROID_KEYSTORE_FILE)
                            .WithProperty("AndroidSigningStorePass", ANDROID_KEYSTORE_PASSWORD);
         });
-
-        MoveAppPackageToPackagesFolder(apkFilePath);
     }
     else
     {
-        var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true);
-        MoveAppPackageToPackagesFolder(apkFilePath);
+        apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true);
     }
+
+    MoveAppPackageToPackagesFolder(apkFilePath);
 });
 
 //====================================================================
