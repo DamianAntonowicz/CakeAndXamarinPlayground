@@ -97,7 +97,6 @@ public class BuildInfo
 Setup<BuildInfo>(setupContext => 
 {
     var gitVersion = GitVersion();
-    var branchName = gitVersion.BranchName;
     var apiUrl = "https://dev.tastyformsapp.com";
     var appName = $"{APP_NAME}.dev";
     var packageName = "com.tastyformsapp.dev";
