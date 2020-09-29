@@ -58,7 +58,7 @@ public string MoveAppPackageToPackagesFolder(FilePath appPackageFilePath)
 public class BuildInfo
 {
     public string ApiUrl { get; }
-    public string BuildNumber { get; }
+    public int BuildNumber { get; }
     public string AppVersion { get; }
     public string AppName { get; }
     public string PackageName { get; }
@@ -70,7 +70,7 @@ public class BuildInfo
 
     public BuildInfo(
       string apiUrl, 
-      string buildNumber, 
+      int buildNumber, 
       string appVersion,
       string appName,
       string packageName,
@@ -126,7 +126,7 @@ Setup<BuildInfo>(setupContext =>
 
     return new BuildInfo(
       apiUrl,
-      buildNumber: DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+      buildNumber: (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
       appVersion: gitVersion.MajorMinorPatch,
       appName,
       packageName,
@@ -226,7 +226,7 @@ Task("UpdateAndroidManifest")
     var manifest = DeserializeAppManifest(androidManifestFilePath);
 
     manifest.VersionName = buildInfo.AppVersion;
-    manifest.VersionCode = int.Parse(buildInfo.BuildNumber);
+    manifest.VersionCode = buildInfo.BuildNumber;
     manifest.ApplicationLabel = buildInfo.AppName;
     manifest.PackageName = buildInfo.PackageName;
     manifest.Debuggable = false;
