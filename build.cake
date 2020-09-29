@@ -1,6 +1,7 @@
 #addin "Cake.Xamarin"
 #addin "Cake.AppCenter"
 #addin "Cake.Plist"
+#addin "Cake.AndroidAppManifest"
 #tool "nuget:?package=GitVersion.CommandLine&version=5.0.1" // Reference older version because newest doesn't work on macOS.
 
 var target = Argument("target", (string)null);
@@ -221,19 +222,16 @@ Task("RunUnitTests")
 Task("UpdateAndroidManifest")
   .Does<BuildInfo>(buildInfo => 
 {
-    var xmlPokeSettings = new XmlPokeSettings
-    {
-        Namespaces = new Dictionary<string, string>
-        {
-            {"android", "http://schemas.android.com/apk/res/android"}
-        }
-    };
+    var androidManifestFilePath = new FilePath(PATH_TO_ANDROID_MANIFEST_FILE);
+    var manifest = DeserializeAppManifest(androidManifestFilePath);
 
-    var androidManifestFilePath = PATH_TO_ANDROID_MANIFEST_FILE;
-    XmlPoke(androidManifestFilePath, "/manifest/@android:versionName", buildInfo.AppVersion, xmlPokeSettings);
-    XmlPoke(androidManifestFilePath, "/manifest/@android:versionCode", buildInfo.BuildNumber, xmlPokeSettings);
-    XmlPoke(androidManifestFilePath, "/manifest/application/@android:label", buildInfo.AppName, xmlPokeSettings);
-    XmlPoke(androidManifestFilePath, "/manifest/@package", buildInfo.PackageName, xmlPokeSettings);
+    manifest.VersionName = buildInfo.AppVersion;
+    manifest.VersionCode = int.Parse(buildInfo.BuildNumber);
+    manifest.ApplicationLabel = buildInfo.AppName;
+    manifest.PackageName = buildInfo.PackageName;
+    manifest.Debuggable = false;
+
+    SerializeAppManifest(androidManifestFilePath, manifest);
 });
 
 //====================================================================
