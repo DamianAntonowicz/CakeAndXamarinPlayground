@@ -1,5 +1,6 @@
 #addin "Cake.Xamarin"
 #addin "Cake.AppCenter"
+#addin "Cake.Plist"
 #tool "nuget:?package=GitVersion.CommandLine&version=5.0.1" // Reference older version because newest doesn't work on macOS.
 
 var target = Argument("target", (string)null);
@@ -294,18 +295,16 @@ Task("DeployAPKToAppCenter")
 Task("UpdateIosInfoPlist")
   .Does<BuildInfo>(buildInfo =>
   {
-    var iOSplist = PATH_TO_INFO_PLIST_FILE;
+    var plist = File(PATH_TO_INFO_PLIST_FILE);
+    dynamic data = DeserializePlist(plist);
 
-    var xmlPokeSettings = new XmlPokeSettings
-    {
-        DtdProcessing = XmlDtdProcessing.Parse
-    };
+    data["CFBundleShortVersionString"] = buildInfo.AppVersion;
+    data["CFBundleVersion"] = buildInfo.BuildNumber;
+    data["CFBundleName"] = buildInfo.AppName;
+    data["CFBundleDisplayName"] = buildInfo.AppName;
+    data["CFBundleIdentifier"] = buildInfo.PackageName;
 
-    XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleShortVersionString']/following-sibling::string[1]", buildInfo.AppVersion, xmlPokeSettings);
-    XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleVersion']/following-sibling::string[1]", buildInfo.BuildNumber, xmlPokeSettings);
-    XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleName']/following-sibling::string[1]", buildInfo.AppName, xmlPokeSettings);
-    XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleDisplayName']/following-sibling::string[1]", buildInfo.AppName, xmlPokeSettings);
-    XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleIdentifier']/following-sibling::string[1]", buildInfo.PackageName, xmlPokeSettings);
+    SerializePlist(plist, data);
   });
 
 //====================================================================
