@@ -3,7 +3,7 @@
 #tool "nuget:?package=GitVersion.CommandLine&version=5.0.1" // Reference older version because newest doesn't work on macOS.
 
 var target = Argument("target", (string)null);
-var environmentArg = Argument("environment", (string)null);
+var environmentArg = Argument("env", (string)null);
 
 //====================================================================
 // Consts
