@@ -212,6 +212,8 @@ Task("RunUnitTests")
       DotNetCoreTest(PATH_TO_UNIT_TESTS_PROJECT, settings);
   });
 
+//==================================================================== Android ====================================================================
+
 //====================================================================
 // Publish Android APK
 
@@ -275,12 +277,12 @@ Task("DeployAPKToAppCenter")
     });
 });
 
-//====================================================================
-// Publish iOS IPA
+//==================================================================== iOS ====================================================================
 
-Task("PublishIPA")
-  .IsDependentOn("RunUnitTests")
-  .IsDependentOn("UpdateConfigFiles")
+//====================================================================
+// Update iOS Info.plist
+
+Task("UpdateIosInfoPlist")
   .Does<BuildInfo>(buildInfo =>
   {
     var iOSplist = PATH_TO_INFO_PLIST_FILE;
@@ -295,7 +297,17 @@ Task("PublishIPA")
     XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleName']/following-sibling::string[1]", buildInfo.AppName, xmlPokeSettings);
     XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleDisplayName']/following-sibling::string[1]", buildInfo.AppName, xmlPokeSettings);
     XmlPoke(iOSplist, "/plist/dict/key[text()='CFBundleIdentifier']/following-sibling::string[1]", buildInfo.PackageName, xmlPokeSettings);
+  });
 
+//====================================================================
+// Publish iOS IPA
+
+Task("PublishIPA")
+  .IsDependentOn("RunUnitTests")
+  .IsDependentOn("UpdateConfigFiles")
+  .IsDependentOn("UpdateIosInfoPlist")
+  .Does<BuildInfo>(buildInfo =>
+  {
     var buildConfiguration = "Release";
 
     if (buildInfo.Environment == PROD_ENV)
