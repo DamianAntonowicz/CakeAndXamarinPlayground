@@ -28,9 +28,9 @@
         </magic:GradientView>
         
         <Label
-            Text="Welcome to Xamarin.Forms!"
+            Text="Cake and Xamarin!"
             TextColor="White"
-            FontSize="Large"
+            FontSize="50"
             HorizontalOptions="Center"
             VerticalOptions="CenterAndExpand" />
         
