@@ -30,7 +30,7 @@
         <Label
             Text="Cake and Xamarin!"
             TextColor="White"
-            FontSize="50"
+            FontSize="40"
             HorizontalOptions="Center"
             VerticalOptions="CenterAndExpand" />
         
