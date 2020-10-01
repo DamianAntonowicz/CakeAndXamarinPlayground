@@ -345,6 +345,18 @@ Task("DeployIPAToAppCenter")
     });
 });
 
+//==================================================================== App Center ====================================================================
+
+//====================================================================
+// Deploys APK and IPA to App Center
+
+Task("DeployAPKAndIPAToAppCenter")
+  .IsDependentOn("DeployAPKToAppCenter")
+  .IsDependentOn("DeployIPAToAppCenter")
+  .Does<BuildInfo>(buildInfo => 
+{
+});
+
 //====================================================================
 
 RunTarget(target);
