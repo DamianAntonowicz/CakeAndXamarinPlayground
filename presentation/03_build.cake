@@ -1,3 +1,5 @@
+// Step #3 - publishing APK and IPA
+
 #addin "Cake.Xamarin"
 
 var target = Argument("target", (string)null);
@@ -51,7 +53,10 @@ Task("Clean")
 Task("Restore")
   .Does(() =>
 {
-  NuGetRestore(PATH_TO_SOLUTION);
+    DotNetCoreRestore(PATH_TO_SOLUTION);
+    
+    NuGetRestore(PATH_TO_IOS_PROJECT);
+    NuGetRestore(PATH_TO_ANDROID_PROJECT);
 });
 
 //====================================================================
@@ -64,11 +69,14 @@ Task("RunUnitTests")
   {
      var settings = new DotNetCoreTestSettings
      {
-         Configuration = "Release"
+         Configuration = "Release",
+         ArgumentCustomization = args=>args.Append("--logger trx")
      };
 
       DotNetCoreTest(PATH_TO_UNIT_TESTS_PROJECT, settings);
   });
+
+//==================================================================== Android ====================================================================
 
 //====================================================================
 // Publish Android APK
@@ -78,8 +86,11 @@ Task("PublishAPK")
   .Does(() => 
 {
     var apkFilePath = BuildAndroidApk(PATH_TO_ANDROID_PROJECT, sign: true);
+
     MoveAppPackageToPackagesFolder(apkFilePath);
 });
+
+//==================================================================== iOS ====================================================================
 
 //====================================================================
 // Publish iOS IPA
@@ -88,8 +99,12 @@ Task("PublishIPA")
   .IsDependentOn("RunUnitTests")
   .Does(() =>
   {
-        var ipaFilePath = BuildiOSIpa(PATH_TO_IOS_PROJECT, "Release");
-        MoveAppPackageToPackagesFolder(ipaFilePath);
+    var buildConfiguration = "Release";
+
+    var ipaFilePath = BuildiOSIpa(PATH_TO_IOS_PROJECT, buildConfiguration);
+    MoveAppPackageToPackagesFolder(ipaFilePath);
   });
+
+//====================================================================
 
 RunTarget(target);

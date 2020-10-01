@@ -1,3 +1,5 @@
+// Step #2 - running unit tests
+
 var target = Argument("target", (string)null);
 
 //====================================================================
@@ -23,7 +25,7 @@ Task("Clean")
 Task("Restore")
   .Does(() =>
 {
-  NuGetRestore(PATH_TO_SOLUTION);
+    DotNetCoreRestore(PATH_TO_SOLUTION);
 });
 
 //====================================================================
@@ -36,7 +38,8 @@ Task("RunUnitTests")
   {
      var settings = new DotNetCoreTestSettings
      {
-         Configuration = "Release"
+         Configuration = "Release",
+         ArgumentCustomization = args=>args.Append("--logger trx")
      };
 
       DotNetCoreTest(PATH_TO_UNIT_TESTS_PROJECT, settings);
