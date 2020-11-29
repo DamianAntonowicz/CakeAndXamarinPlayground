@@ -2,6 +2,7 @@
 #addin "Cake.AppCenter"
 #addin "Cake.Plist"
 #addin "Cake.AndroidAppManifest"
+#addin "Cake.Fastlane"
 #tool "nuget:?package=GitVersion.CommandLine&version=5.0.1" // Reference older version because newest doesn't work on macOS.
 
 var target = Argument("target", (string)null);
@@ -28,6 +29,7 @@ const string PATH_TO_ANDROID_MANIFEST_FILE = "TastyFormsApp.Android/Properties/A
 readonly string PATH_TO_ANDROID_KEYSTORE_FILE = EnvironmentVariable("TASTYFORMSAPP_KEYSTORE_PATH");
 readonly string ANDROID_KEYSTORE_ALIAS = EnvironmentVariable("TASTYFORMSAPP_KEYSTORE_ALIAS");
 readonly string ANDROID_KEYSTORE_PASSWORD = EnvironmentVariable("TASTYFORMSAPP_KEYSTORE_PASSWORD");
+readonly string GOOGLE_PLAY_CONSOLE_JSON_KEY_FILE_PATH = EnvironmentVariable("GOOGLE_PLAY_CONSOLE_JSON_KEY_FILE_PATH");
 
 // iOS
 const string PATH_TO_IOS_PROJECT = "TastyFormsApp.iOS/TastyFormsApp.iOS.csproj";
@@ -263,6 +265,27 @@ Task("PublishAPK")
 
     MoveAppPackageToPackagesFolder(apkFilePath);
 });
+
+//====================================================================
+// Deploy APK to Google Play Internal track
+
+Task("DeployAPKToInternalTrack")
+  .IsDependentOn("PublishAPK")
+  .Does<BuildInfo>(buildInfo => 
+  {
+           var configuration = new FastlaneSupplyConfiguration
+           {
+                 ApkFilePath = $"{APP_PACKAGE_FOLDER_NAME}/{buildInfo.ApkFileName}",
+                 JsonKeyFilePath = GOOGLE_PLAY_CONSOLE_JSON_KEY_FILE_PATH,
+                 SkipUploadMetadata = true,
+                 SkipUploadImages = true,
+                 SkipUploadScreenShots = true,
+                 Track = "internal",
+                 PackageName = buildInfo.PackageName
+           };
+
+           Fastlane.Supply(configuration);
+  });
 
 //====================================================================
 // Deploys APK to App Center
