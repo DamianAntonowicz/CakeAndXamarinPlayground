@@ -269,7 +269,7 @@ Task("PublishAPK")
 //====================================================================
 // Deploy APK to Google Play Internal track
 
-Task("DeployAPKToInternalTrack")
+Task("DeployAPKToGooglePlayInternalTrack")
   .IsDependentOn("PublishAPK")
   .Does<BuildInfo>(buildInfo => 
   {
