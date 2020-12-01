@@ -277,6 +277,7 @@ Task("DeployAPKToGooglePlayInternalTrack")
            {
                  ApkFilePath = $"{APP_PACKAGE_FOLDER_NAME}/{buildInfo.ApkFileName}",
                  JsonKeyFilePath = GOOGLE_PLAY_CONSOLE_JSON_KEY_FILE_PATH,
+                 MetadataPath = "AndroidMetadata",
                  SkipUploadMetadata = true,
                  SkipUploadImages = true,
                  SkipUploadScreenShots = true,
