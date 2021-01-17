@@ -34,6 +34,7 @@ readonly string GOOGLE_PLAY_CONSOLE_JSON_KEY_FILE_PATH = EnvironmentVariable("GO
 // iOS
 const string PATH_TO_IOS_PROJECT = "TastyFormsApp.iOS/TastyFormsApp.iOS.csproj";
 const string PATH_TO_INFO_PLIST_FILE = "TastyFormsApp.iOS/Info.plist";
+readonly string APP_STORE_CONNECT_API_JSON_KEY_FILE_PATH = EnvironmentVariable("APP_STORE_CONNECT_API_JSON_KEY_FILE_PATH");
 
 //====================================================================
 // Moves app package to app packages folder
@@ -367,6 +368,18 @@ Task("DeployIPAToAppCenter")
         App = buildInfo.IosAppCenterAppName,
         Token = APP_CENTER_TOKEN
     });
+});
+
+//====================================================================
+// Deploys IPA to Test Flight
+Task("DeployIPAToTestFlight")
+  .IsDependentOn("PublishIPA")
+  .Does<BuildInfo>(buildInfo => 
+{
+  Information("Preparing to upload new build number: " + buildInfo.BuildNumber);
+
+  var ipaPath = MakeAbsolute(Directory($"{APP_PACKAGE_FOLDER_NAME}/{buildInfo.IpaFileName}"));
+  StartProcess("fastlane", new ProcessSettings { Arguments = "pilot upload --ipa " + ipaPath + " --skip_waiting_for_build_processing true --api_key_path " + APP_STORE_CONNECT_API_JSON_KEY_FILE_PATH});
 });
 
 //==================================================================== App Center ====================================================================
