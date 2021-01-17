@@ -321,7 +321,7 @@ Task("UpdateIosInfoPlist")
     dynamic data = DeserializePlist(plist);
 
     data["CFBundleShortVersionString"] = buildInfo.AppVersion;
-    data["CFBundleVersion"] = buildInfo.BuildNumber;
+    data["CFBundleVersion"] = buildInfo.BuildNumber.ToString();
     data["CFBundleName"] = buildInfo.AppName;
     data["CFBundleDisplayName"] = buildInfo.AppName;
     data["CFBundleIdentifier"] = buildInfo.PackageName;
