@@ -1,7 +1,7 @@
 # Cake and Xamarin playground
 
 This repository contains sample Cake (https://cakebuild.net/) script, which can:
-- build Xamarin app
+- build Xamarin app for different environments (DEV, STAGING, PROD)
 - deploy build to App Center
 - deploy build to Google Play Internal
 - deploy build to Test Flight
